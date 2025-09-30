@@ -1,0 +1,22 @@
+name: SENTRY refresh
+on:
+  schedule: [{ cron: "0 */6 * * *" }]   # every 6 hours
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - run: python sentry.py
+      - name: Publish artifacts
+        run: |
+          mkdir -p docs
+          cp data/weekly_state.json docs/index.json
+          git config user.name "actions-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/*.json* docs/index.json || true
+          git commit -m "SENTRY: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes"
+          git push
