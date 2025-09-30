@@ -1,0 +1,60 @@
+# Minimal first-pass rules. Tweak freely.
+kinetic_keywords:
+  - airstrike
+  - missile
+  - drone
+  - artillery
+  - bombardment
+  - shelling
+  - rocket
+  - strike
+  - clashes
+  - offensive
+  - attack
+  - bombard
+  - bombardment
+  - mobilization
+  - incursion
+  - invasion
+casualty_keywords:
+  - killed
+  - dead
+  - casualties
+  - wounded
+  - injured
+commerce_disruption_keywords:
+  - shipping
+  - closure
+  - airspace
+  - embargo
+  - blockade
+  - insurance
+  - reroute
+  - port
+regions:
+  - Black Sea
+  - Red Sea
+  - Taiwan Strait
+  - Sahel
+  - Gaza
+  - Donbas
+  - Crimea
+  - Nagorno-Karabakh
+  - South China Sea
+  - Horn of Africa
+  - Baltics
+  - Persian Gulf
+source_tiers:        # crude credibility weighting (domain contains key)
+  tier3:
+    - bbc.co.uk
+    - bbc.com
+    - reuters.com
+    - apnews.com
+    - defense.gov
+  tier2:
+    - aljazeera.com
+    - theguardian.com
+    - ft.com
+  tier1:
+    - medium.com
+    - blogspot.com
