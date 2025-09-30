@@ -5,11 +5,3 @@ Outputs:
 - data/events_scored.jsonl (one event per line)
 - data/weekly_state.json (rollup of last 7 days)
 
-## Quickstart
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-python sentry.py
-
-# Optional: edit feeds and lexicon
-# feeds:   config/feeds.yaml
-# rules:   config/lexicon.yaml
