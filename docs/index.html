@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SENTRY — Weekly State</title>
+<style>body{font:16px/1.4 system-ui;margin:24px;color:#111} h1{margin:0 0 12px} small{color:#666}
+.card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:8px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#111;color:#fff;font-size:12px}
+</style>
+<h1>SENTRY — Weekly State <small id="ts"></small></h1>
+<div id="sum"></div><h3>Top events</h3><div id="list"></div>
+<script>
+async function main(){
+  const r = await fetch('index.json?ts='+Date.now()); const j = await r.json();
+  document.getElementById('ts').textContent = `(${new Date(j.generated_at*1000).toLocaleString()})`;
+  document.getElementById('sum').innerHTML =
+    `<span class="badge">${j.promoted_count} promoted / ${j.events_considered} total</span>`;
+  document.getElementById('list').innerHTML = j.top_events.map(e =>
+    `<div class="card"><b>[${e.score}]</b> <a href="${e.link}" target="_blank" rel="noopener">${e.title}</a><br>
+     <small>${e.source_domain} — ${new Date(e.published).toLocaleString()} — ${e.reasons}</small></div>`
+  ).join('');
+}
+main();
+</script>
