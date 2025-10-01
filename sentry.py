@@ -248,13 +248,28 @@ def main():
         seen.add(k)
         uniq.append(e)
 
-    # score
-    scored = []
-    for e in uniq:
-        s, why = score_event(e, LEX)
-        e["sentry_score"] = s
-        e["reasons"] = why
-        scored.append(e)
+# score (smart): rules → (embed for top N) → borderline LLM
+scored = []
+tmp = []
+for e in uniq:
+    s_rules, why = score_event(e, LEX)
+    e["__rules"] = s_rules
+    e["reasons"] = why
+    tmp.append(e)
+
+# prioritize higher base-score items for embeddings
+tmp.sort(key=lambda x: x["__rules"], reverse=True)
+
+for i, e in enumerate(tmp):
+    text = f"{e['title']} {e['summary']}"
+    do_embed = (i < EMBED_TOP_N)
+    s_final, tag = smart_score(text, e["__rules"], do_embed)
+    e["sentry_score"] = s_final
+    if tag:
+        e["reasons"] += tag
+    e.pop("__rules", None)
+    scored.append(e)
+
 
     # sort + write
     scored.sort(key=lambda x: x["sentry_score"], reverse=True)
