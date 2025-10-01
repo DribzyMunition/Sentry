@@ -36,3 +36,8 @@ jobs:
             data/events_scored.jsonl
             data/weekly_state.json
             docs/index.json
+            
+- name: Run SENTRY
+  run: python sentry.py
+  env:
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
