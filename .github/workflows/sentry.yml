@@ -1,7 +1,9 @@
 name: SENTRY refresh
 on:
   schedule: [{ cron: "0 */6 * * *" }]   # every 6 hours
-  workflow_dispatch:
+  workflow_dispatch: {}
+permissions:
+  contents: write                       # <-- needed to push JSON back
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -10,13 +12,27 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install -r requirements.txt
-      - run: python sentry.py
-      - name: Publish artifacts
+      - name: Run SENTRY
+        run: python sentry.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # ok if unset
+      - name: Copy viewer JSON
         run: |
           mkdir -p docs
           cp data/weekly_state.json docs/index.json
+          ls -la data docs | sed -n '1,200p'             # debug listing
+      - name: Commit & push
+        run: |
           git config user.name "actions-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/*.json* docs/index.json || true
-          git commit -m "SENTRY: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes"
+          git commit -m "SENTRY: refresh $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes"
           git push
+      - name: Upload JSON as artifact (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentry-json
+          path: |
+            data/events_scored.jsonl
+            data/weekly_state.json
+            docs/index.json
