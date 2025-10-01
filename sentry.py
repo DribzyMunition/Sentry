@@ -8,6 +8,93 @@ import yaml
 import tldextract
 from dateutil import parser as dtparse
 
+# --- SMART SCORING (optional) ---
+import os, numpy as np
+try:
+    from openai import OpenAI
+except Exception:
+    OpenAI = None
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SENTRY_SMART   = os.getenv("SENTRY_SMART", "1") == "1"
+EMBED_MODEL    = os.getenv("SENTRY_EMBED_MODEL", "text-embedding-3-small")
+LLM_MODEL      = os.getenv("SENTRY_LLM_MODEL", "gpt-4o-mini")
+EMBED_TOP_N    = int(os.getenv("SENTRY_EMBED_TOP_N", "120"))  # cap embed calls
+
+def _embed(text: str):
+    if not (SENTRY_SMART and OPENAI_API_KEY and OpenAI):
+        return None
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        r = client.embeddings.create(model=EMBED_MODEL, input=text[:4000])
+        return np.array(r.data[0].embedding, dtype=np.float32)
+    except Exception:
+        return None
+
+_ANCHOR = None
+def _anchor_vec():
+    global _ANCHOR
+    if _ANCHOR is not None:
+        return _ANCHOR
+    seed = " ; ".join([
+        " ".join(LEX.get("kinetic_keywords", [])),
+        " ".join(LEX.get("casualty_keywords", [])),
+        " ".join(LEX.get("commerce_disruption_keywords", [])),
+        " ".join(LEX.get("regions", []))
+    ])
+    _ANCHOR = _embed("Conflict signals: " + seed)
+    return _ANCHOR
+
+def _embed_pts(text: str) -> int:
+    a, v = _anchor_vec(), _embed(text)
+    if a is None or v is None:
+        return 0
+    cos = float(np.dot(a, v) / (np.linalg.norm(a) * np.linalg.norm(v) + 1e-9))
+    if cos >= 0.92: return 4
+    if cos >= 0.88: return 3
+    if cos >= 0.84: return 2
+    if cos >= 0.80: return 1
+    return 0
+
+def _llm_nudge(text: str, base: int) -> int:
+    if not (SENTRY_SMART and OPENAI_API_KEY and 5 <= base <= 7 and OpenAI):
+        return base
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        schema = {
+          "name": "SentryScore",
+          "strict": True,
+          "schema": {
+            "type": "object",
+            "properties": {"sentry_score": {"type":"integer","minimum":0,"maximum":10}},
+            "required": ["sentry_score"]
+          }
+        }
+        r = client.responses.create(
+          model=LLM_MODEL,
+          input=[{"role":"user","content":"Return JSON {sentry_score:0..10} only.\n\n"+text[:4000]}],
+          response_format={"type":"json_schema","json_schema":schema}
+        )
+        js = getattr(r, "output_parsed", None) or {}
+        return max(0, min(10, int(js.get("sentry_score", base))))
+    except Exception:
+        return base
+
+def smart_score(text: str, base: int, do_embed: bool) -> (int, str):
+    s, tag = base, ""
+    if do_embed:
+        pts = _embed_pts(text)
+        if pts:
+            s += pts
+            tag += f"; embed+{pts}"
+    if 5 <= s <= 7:
+        s2 = _llm_nudge(text, s)
+        if s2 != s:
+            s = s2
+            tag += "; llm"
+    return max(0, min(10, int(s))), tag
+
+
 ROOT = Path(__file__).parent
 CFG_DIR = ROOT / "config"
 DATA_DIR = ROOT / "data"
