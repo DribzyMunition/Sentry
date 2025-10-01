@@ -2,3 +2,6 @@ feedparser==6.0.10
 PyYAML>=6.0.1
 python-dateutil>=2.8.2
 tldextract>=5.1.2
+
+openai>=1.40.0
+numpy>=1.26.0
