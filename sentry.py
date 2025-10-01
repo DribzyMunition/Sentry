@@ -248,6 +248,9 @@ def main():
         seen.add(k)
         uniq.append(e)
 
+if 'uniq' not in locals():  # safety: ensure uniq exists in this scope
+    uniq = all_items
+    
 # score (smart): rules → (embed for top N) → borderline LLM
 scored = []
 tmp = []
