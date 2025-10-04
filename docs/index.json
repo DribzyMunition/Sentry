@@ -1,11 +1,11 @@
 {
-  "generated_at": 1759560180,
+  "generated_at": 1759582914,
   "window_days": 7,
-  "events_considered": 62,
+  "events_considered": 66,
   "promoted_count": 0,
   "by_region_promoted": {
-    "Gaza": 0,
-    "Global/Unspecified": 0
+    "Global/Unspecified": 0,
+    "Gaza": 0
   },
   "top_events": []
 }
