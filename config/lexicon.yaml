@@ -22,6 +22,14 @@ casualty_keywords:
   - casualties
   - wounded
   - injured
+market_impact_keywords:
+  - downgrade
+  - credit watch
+  - CDS
+  - yield surge
+  - bond issuance
+  - rating action
+  - capital controls
 commerce_disruption_keywords:
   - shipping
   - closure
@@ -31,6 +39,18 @@ commerce_disruption_keywords:
   - insurance
   - reroute
   - port
+  - sanctions
+  - export control
+  - OFAC
+  - EU Council restrictive measures
+  - entity list
+  - SDN list
+  - embargo
+  - tariff
+  - price cap
+  - secondary sanctions
+  - general license
+  - export ban
 regions:
   - Black Sea
   - Red Sea
@@ -44,6 +64,16 @@ regions:
   - Horn of Africa
   - Baltics
   - Persian Gulf
+  procurement_keywords:
+  - appropriation
+  - defense budget
+  - supplemental spending
+  - NDAA
+  - procurement
+  - tender
+  - RFP
+  - contract award
+  - arms deal
 source_tiers:        # crude credibility weighting (domain contains key)
   tier3:
     - bbc.co.uk
