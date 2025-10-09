@@ -250,6 +250,11 @@ LEX   = load_yaml(LEX_FILE, None, default={
 })
 
 def main():
+    # exit early if we've already run once during the local Sydney day
+    if already_ran_today():
+        print("SENTRY: already ran today — exiting.")
+        return
+
     all_items = []
     for url in FEEDS:
         try:
@@ -267,7 +272,7 @@ def main():
         seen.add(k)
         uniq.append(e)
 
-    # score (smart): rules → (embed for top N) → borderline LLM
+    # score
     scored, tmp = [], []
     for e in uniq:
         s_rules, why = score_event(e, LEX)
@@ -275,7 +280,6 @@ def main():
         e["reasons"] = why
         tmp.append(e)
 
-    # prioritize higher base-score items for embeddings
     tmp.sort(key=lambda x: x["__rules"], reverse=True)
 
     for i, e in enumerate(tmp):
@@ -288,7 +292,6 @@ def main():
         e.pop("__rules", None)
         scored.append(e)
 
-    # sort + write
     scored.sort(key=lambda x: x["sentry_score"], reverse=True)
     with (DATA_DIR / "events_scored.jsonl").open("w", encoding="utf-8") as f:
         for e in scored:
@@ -297,10 +300,13 @@ def main():
     weekly = weekly_rollup(scored, days=7)
     (DATA_DIR / "weekly_state.json").write_text(json.dumps(weekly, indent=2))
 
-    # console summary
     print(f"SENTRY: {len(scored)} items, top 5:")
     for e in scored[:5]:
         print(f"  [{e['sentry_score']:02d}] {e['title']}  ({e['source_domain']})")
+
+    # only mark success after finishing
+    mark_ran_today()
+
 
 if __name__ == "__main__":
     main()
