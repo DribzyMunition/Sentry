@@ -8,6 +8,24 @@ import yaml
 import tldextract
 from dateutil import parser as dtparse
 
+from zoneinfo import ZoneInfo
+RUN_TZ = ZoneInfo("Australia/Sydney")
+LAST_RUN_FILE = DATA_DIR / "last_run_local_date.txt"
+
+def already_ran_today() -> bool:
+    today = datetime.now(RUN_TZ).date().isoformat()
+    try:
+        prev = LAST_RUN_FILE.read_text().strip()
+        if prev == today:
+            print(f"SENTRY: already ran today ({today} {RUN_TZ}) — exiting.")
+            return True
+    except FileNotFoundError:
+        pass
+    LAST_RUN_FILE.write_text(today)
+    return False
+
+
+
 # --- SMART SCORING (optional) ---
 import os, numpy as np
 try:
